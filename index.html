@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Malla Curricular - Administración</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f8ff;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #036;
+    }
+
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .year {
+      background: #e6f2ff;
+      border-radius: 10px;
+      padding: 10px;
+      width: 250px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .year h2 {
+      text-align: center;
+      color: #005580;
+      font-size: 18px;
+    }
+
+    .semester {
+      margin-top: 10px;
+    }
+
+    .semester h3 {
+      font-size: 16px;
+      margin-bottom: 5px;
+      color: #0073a6;
+    }
+
+    .subject {
+      background-color: #cce6ff;
+      border: 2px solid #99ccff;
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      position: relative;
+      transition: background-color 0.3s;
+    }
+
+    .subject.locked {
+      background-color: #e0e0e0;
+      border-color: #bbb;
+      cursor: not-allowed;
+      color: #666;
+    }
+
+    .subject.locked::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #333;
+      color: #fff;
+      padding: 5px;
+      border-radius: 5px;
+      white-space: pre-line;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      width: 200px;
+      z-index: 10;
+    }
+
+    .subject.locked:hover::after {
+      opacity: 1;
+    }
+
+    .subject.approved {
+      background-color: #b2fab4;
+      border-color: #6cc070;
+      color: #1a4d1a;
+    }
+  </style>
+</head>
+<body>
+  <h1>Malla Curricular - Administración</h1>
+  <div class="grid" id="malla"></div>
+
+  <script>
+    const materias = {
+      "Contabilidad financiera": [],
+      "Matematica I": [],
+      "Principios de economia I": [],
+      "Administracion": ["Contabilidad financiera", "Principios de economia I"],
+      "Matematica II": ["Matematica I"],
+      "Derecho empresario I": [],
+      "Costos": ["Contabilidad financiera"],
+      "Sistemas de informacion I": ["Contabilidad financiera"],
+      "Taller de matematica financiera": ["Matematica I"],
+      "Estadistica": ["Matematica II"],
+      "Principios de economia II": ["Principios de economia I"],
+      "Derecho societario": ["Derecho empresario I"],
+      "Comportamiento organizacional": ["Administracion"],
+      "Contabilidad gerencial": ["Contabilidad financiera", "Administracion", "Costos", "Estadistica"],
+      "Estadistica inferencial": ["Estadistica"],
+      "Taller de legislacion y practica impositiva": ["Derecho societario"],
+      "Comercializacion I": ["Contabilidad financiera", "Administracion", "Principios de economia I"],
+      "Organizacion contable de empresas": ["Sistemas de informacion I"],
+      "Administracion de operaciones I": ["Sistemas de informacion I", "Principios de economia I", "Estadistica"],
+      "Taller de derecho del trabajo y la seguridad social": ["Derecho empresario I"],
+      "Finanzas de empresas I": ["Contabilidad financiera", "Principios de economia I", "Administracion", "Taller de matematica financiera", "Estadistica"],
+      "Comercializacion II": ["Estadistica inferencial", "Comercializacion I"],
+      "Administracion de recursos humanos I": ["Contabilidad financiera", "Estadistica", "Comportamiento organizacional", "Taller de derecho del trabajo y la seguridad social"],
+      "Taller de metodologia de la investigacion": ["Principios de economia I", "Derecho empresario I", "Sistemas de informacion I", "Contabilidad gerencial", "Comportamiento organizacional", "Estadistica inferencial"],
+      "Finanzas de empresas II": ["Finanzas de empresas I", "Estadistica inferencial"],
+      "Administracion de operaciones II": ["Administracion de operaciones I"],
+      "Optativa I": [],
+      "Formulacion y evaluacion de proyectos": ["Costos", "Comercializacion I", "Administracion de operaciones I"],
+      "Analisis cuantitativo de negocios": ["Contabilidad gerencial", "Estadistica inferencial"],
+      "Optativa II": [],
+      "Optativa III": [],
+      "Direccion estrategica": ["Comportamiento organizacional", "Contabilidad gerencial", "Comercializacion I", "Administracion de operaciones I", "Finanzas de empresas I"],
+      "Opciones de practica profesional": [
+        "Sistemas de informacion I",
+        "Contabilidad gerencial",
+        "Comercializacion I",
+        "Organizacion contable de empresas",
+        "Administracion de operaciones I",
+        "Finanzas de empresas I",
+        "Administracion de recursos humanos I",
+        "Taller de metodologia de la investigacion"
+      ],
+      "Optativa IV": []
+    };
+
+    const estructura = [
+      { año: "Primer año", semestres: [
+        { nombre: "I semestre", materias: ["Contabilidad financiera", "Matematica I", "Principios de economia I"] },
+        { nombre: "II semestre", materias: ["Administracion", "Matematica II", "Derecho empresario I"] }
+      ]},
+      { año: "Segundo año", semestres: [
+        { nombre: "I semestre", materias: ["Costos", "Sistemas de informacion I", "Taller de matematica financiera"] },
+        { nombre: "II semestre", materias: ["Estadistica", "Principios de economia II", "Derecho societario"] }
+      ]},
+      { año: "Tercer año", semestres: [
+        { nombre: "I semestre", materias: ["Comportamiento organizacional", "Contabilidad gerencial", "Estadistica inferencial", "Taller de legislacion y practica impositiva"] },
+        { nombre: "II semestre", materias: ["Comercializacion I", "Organizacion contable de empresas", "Administracion de operaciones I", "Taller de derecho del trabajo y la seguridad social"] }
+      ]},
+      { año: "Cuarto año", semestres: [
+        { nombre: "I semestre", materias: ["Finanzas de empresas I", "Comercializacion II", "Administracion de recursos humanos I", "Taller de metodologia de la investigacion"] },
+        { nombre: "II semestre", materias: ["Finanzas de empresas II", "Administracion de operaciones II", "Optativa I"] }
+      ]},
+      { año: "Quinto año", semestres: [
+        { nombre: "I semestre", materias: ["Formulacion y evaluacion de proyectos", "Analisis cuantitativo de negocios", "Optativa II", "Optativa III"] },
+        { nombre: "II semestre", materias: ["Direccion estrategica", "Opciones de practica profesional", "Optativa IV"] }
+      ]}
+    ];
+
+    const aprobadas = new Set(JSON.parse(localStorage.getItem('materiasAprobadas') || "[]"));
+
+    function guardarProgreso() {
+      localStorage.setItem('materiasAprobadas', JSON.stringify([...aprobadas]));
+    }
+
+    function puedeDesbloquear(materia) {
+      const requisitos = materias[materia] || [];
+      return requisitos.every(req => aprobadas.has(req));
+    }
+
+    function faltantes(materia) {
+      const requisitos = materias[materia] || [];
+      return requisitos.filter(req => !aprobadas.has(req)).join('\n');
+    }
+
+    function crearMalla() {
+      const contenedor = document.getElementById("malla");
+      contenedor.innerHTML = "";
+
+      estructura.forEach(anio => {
+        const col = document.createElement("div");
+        col.className = "year";
+
+        const titulo = document.createElement("h2");
+        titulo.textContent = anio.año;
+        col.appendChild(titulo);
+
+        anio.semestres.forEach(sem => {
+          const semDiv = document.createElement("div");
+          semDiv.className = "semester";
+
+          const semTitulo = document.createElement("h3");
+          semTitulo.textContent = sem.nombre;
+          semDiv.appendChild(semTitulo);
+
+          sem.materias.forEach(materia => {
+            const matDiv = document.createElement("div");
+            matDiv.className = "subject";
+
+            if (aprobadas.has(materia)) {
+              matDiv.classList.add("approved");
+            } else if (!puedeDesbloquear(materia)) {
+              matDiv.classList.add("locked");
+              matDiv.setAttribute("data-tooltip", "Falta:\n" + faltantes(materia));
+            }
+
+            matDiv.textContent = materia;
+            matDiv.onclick = () => {
+              if (matDiv.classList.contains("locked")) return;
+              if (aprobadas.has(materia)) {
+                aprobadas.delete(materia);
+              } else {
+                aprobadas.add(materia);
+              }
+              guardarProgreso();
+              crearMalla();
+            };
+
+            semDiv.appendChild(matDiv);
+          });
+
+          col.appendChild(semDiv);
+        });
+
+        contenedor.appendChild(col);
+      });
+    }
+
+    crearMalla();
+  </script>
+</body>
+</html>
